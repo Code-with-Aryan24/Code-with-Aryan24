@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Analyzer Demo - Volume Moderation Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .control-section {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:active {
+            transform: translateY(0);
+        }
+
+        .start-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-icon {
+            font-size: 1.5rem;
+        }
+
+        .status {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .countdown {
+            margin-top: 10px;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            min-height: 3rem;
+        }
+
+        .analysis-section {
+            margin-top: 40px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .result-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .summary-content {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .recommendations {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .recommendations h3 {
+            color: #1976d2;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .recommendations-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #1976d2;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .info-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .info-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-section li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #555;
+        }
+
+        .info-section li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .recording .start-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .header h1 { font-size: 2.5rem; }
+            .main-content { padding: 25px; }
+            .control-section { padding: 20px; }
+            .start-btn { padding: 15px 30px; font-size: 1.1rem; }
+            .results-grid { grid-template-columns: 1fr; gap: 15px; }
+            .result-card { padding: 15px; }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 { font-size: 2rem; }
+            .header p { font-size: 1rem; }
+            .main-content { padding: 20px; }
+            .start-btn { padding: 12px 25px; font-size: 1rem; }
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .loading { opacity: 0.7; pointer-events: none; }
+        .success { animation: successPulse 0.6s ease-in-out; }
+
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .summary-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .summary-item:last-child { border-bottom: none; }
+        .recommendation-item {
+            padding: 8px 0;
+            color: #1976d2;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🔊 Sound Analyzer</h1>
+            <p>Analyze background noise for optimal volume settings</p>
+        </header>
+
+        <main class="main-content">
+            <div class="control-section">
+                <button id="startBtn" class="start-btn">
+                    <span class="btn-icon">🎤</span>
+                    Start Recording
+                </button>
+                <div id="status" class="status">Ready to analyze</div>
+                <div id="countdown" class="countdown"></div>
+            </div>
+
+            <div class="analysis-section" id="analysisSection" style="display: none;">
+                <div class="results-grid">
+                    <div class="result-card">
+                        <h3>📊 Frequency Analysis</h3>
+                        <canvas id="frequencyChart" width="400" height="200"></canvas>
+                    </div>
+                    
+                    <div class="result-card">
+                        <h3>📈 Volume Levels</h3>
+                        <canvas id="volumeChart" width="400" height="200"></canvas>
+                    </div>
+                    
+                    <div class="result-card">
+                        <h3>🎵 Spectral Analysis</h3>
+                        <canvas id="spectralChart" width="400" height="200"></canvas>
+                    </div>
+                    
+                    <div class="result-card">
+                        <h3>📋 Analysis Summary</h3>
+                        <div id="summary" class="summary-content"></div>
+                    </div>
+                </div>
+
+                <div class="recommendations">
+                    <h3>🎯 Volume Recommendations</h3>
+                    <div id="recommendations" class="recommendations-content"></div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3>ℹ️ How it works</h3>
+                <ul>
+                    <li>Click "Start Recording" to begin analysis</li>
+                    <li>Microphone will record for 5 seconds</li>
+                    <li>Background noise levels are analyzed</li>
+                    <li>Get personalized volume recommendations</li>
+                    <li>Optimize your device volume for surroundings</li>
+                </ul>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Built with ❤️ for better audio experiences</p>
+        </footer>
+    </div>
+
+    <script>
+        class SoundAnalyzer {
+            constructor() {
+                this.audioContext = null;
+                this.analyser = null;
+                this.microphone = null;
+                this.recording = false;
+                this.audioData = [];
+                this.frequencyData = [];
+                this.volumeData = [];
+                this.spectralData = [];
+                
+                this.initializeElements();
+                this.bindEvents();
+            }
+
+            initializeElements() {
+                this.startBtn = document.getElementById('startBtn');
+                this.status = document.getElementById('status');
+                this.countdown = document.getElementById('countdown');
+                this.analysisSection = document.getElementById('analysisSection');
+                this.summary = document.getElementById('summary');
+                this.recommendations = document.getElementById('recommendations');
+            }
+
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.startRecording());
+            }
+
+            async startRecording() {
+                try {
+                    this.startBtn.disabled = true;
+                    this.startBtn.classList.add('recording');
+                    this.status.textContent = 'Requesting microphone access...';
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: false,
+                            noiseSuppression: false,
+                            autoGainControl: false
+                        } 
+                    });
+                    
+                    this.status.textContent = 'Recording in progress...';
+                    this.recording = true;
+                    
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    this.analyser = this.audioContext.createAnalyser();
+                    this.microphone = this.audioContext.createMediaStreamSource(stream);
+                    
+                    this.analyser.fftSize = 2048;
+                    this.analyser.smoothingTimeConstant = 0.8;
+                    
+                    this.microphone.connect(this.analyser);
+                    
+                    this.collectAudioData();
+                    this.startCountdown();
+                    
+                } catch (error) {
+                    console.error('Error accessing microphone:', error);
+                    this.status.textContent = 'Error: Could not access microphone. Please check permissions.';
+                    this.startBtn.disabled = false;
+                    this.startBtn.classList.remove('recording');
+                }
+            }
+
+            collectAudioData() {
+                if (!this.recording) return;
+                
+                const bufferLength = this.analyser.frequencyBinCount;
+                const frequencyArray = new Uint8Array(bufferLength);
+                const timeDomainArray = new Uint8Array(bufferLength);
+                
+                this.analyser.getByteFrequencyData(frequencyArray);
+                this.analyser.getByteTimeDomainData(timeDomainArray);
+                
+                let rms = 0;
+                for (let i = 0; i < timeDomainArray.length; i++) {
+                    rms += (timeDomainArray[i] - 128) ** 2;
+                }
+                rms = Math.sqrt(rms / timeDomainArray.length);
+                
+                this.frequencyData.push([...frequencyArray]);
+                this.volumeData.push(rms);
+                this.spectralData.push(this.calculateSpectralCentroid(frequencyArray));
+                
+                if (this.recording) {
+                    requestAnimationFrame(() => this.collectAudioData());
+                }
+            }
+
+            calculateSpectralCentroid(frequencyArray) {
+                let weightedSum = 0;
+                let sum = 0;
+                
+                for (let i = 0; i < frequencyArray.length; i++) {
+                    const frequency = i * this.audioContext.sampleRate / (this.analyser.fftSize * 2);
+                    const magnitude = frequencyArray[i] / 255;
+                    
+                    weightedSum += frequency * magnitude;
+                    sum += magnitude;
+                }
+                
+                return sum > 0 ? weightedSum / sum : 0;
+            }
+
+            startCountdown() {
+                let timeLeft = 5;
+                
+                const countdownInterval = setInterval(() => {
+                    this.countdown.textContent = timeLeft;
+                    timeLeft--;
+                    
+                    if (timeLeft < 0) {
+                        clearInterval(countdownInterval);
+                        this.stopRecording();
+                    }
+                }, 1000);
+            }
+
+            stopRecording() {
+                this.recording = false;
+                this.startBtn.classList.remove('recording');
+                this.countdown.textContent = '';
+                this.status.textContent = 'Analysis complete!';
+                
+                if (this.microphone && this.microphone.mediaStream) {
+                    this.microphone.mediaStream.getTracks().forEach(track => track.stop());
+                }
+                
+                this.analyzeData();
+                this.startBtn.disabled = false;
+            }
+
+            analyzeData() {
+                const avgVolume = this.volumeData.reduce((a, b) => a + b, 0) / this.volumeData.length;
+                const maxVolume = Math.max(...this.volumeData);
+                const minVolume = Math.min(...this.volumeData);
+                
+                const avgSpectralCentroid = this.spectralData.reduce((a, b) => a + b, 0) / this.spectralData.length;
+                
+                const noiseLevel = this.categorizeNoiseLevel(avgVolume);
+                const recommendations = this.generateVolumeRecommendations(noiseLevel, avgVolume);
+                
+                this.displayResults(avgVolume, maxVolume, minVolume, avgSpectralCentroid, noiseLevel);
+                this.displayRecommendations(recommendations);
+                
+                this.analysisSection.style.display = 'block';
+                this.analysisSection.classList.add('success');
+                
+                this.createCharts();
+            }
+
+            categorizeNoiseLevel(avgVolume) {
+                if (avgVolume < 10) return 'Very Quiet';
+                if (avgVolume < 20) return 'Quiet';
+                if (avgVolume < 35) return 'Moderate';
+                if (avgVolume < 50) return 'Loud';
+                return 'Very Loud';
+            }
+
+            generateVolumeRecommendations(noiseLevel, avgVolume) {
+                const recommendations = [];
+                
+                switch (noiseLevel) {
+                    case 'Very Quiet':
+                        recommendations.push('Use low volume (20-30%) for comfortable listening');
+                        recommendations.push('Consider using headphones for better audio quality');
+                        recommendations.push('Background noise is minimal - audio clarity should be excellent');
+                        break;
+                    case 'Quiet':
+                        recommendations.push('Use moderate-low volume (30-40%)');
+                        recommendations.push('Good environment for detailed audio content');
+                        recommendations.push('No need for high volume levels');
+                        break;
+                    case 'Moderate':
+                        recommendations.push('Use medium volume (40-60%) for balanced audio');
+                        recommendations.push('Consider slight volume increase for clarity');
+                        recommendations.push('Background noise may affect audio perception');
+                        break;
+                    case 'Loud':
+                        recommendations.push('Use higher volume (60-80%) to overcome background noise');
+                        recommendations.push('Consider noise-cancelling headphones');
+                        recommendations.push('Audio may need to be louder for clear understanding');
+                        break;
+                    case 'Very Loud':
+                        recommendations.push('Use high volume (70-90%) to ensure audio is audible');
+                        recommendations.push('Strongly recommend noise-cancelling headphones');
+                        recommendations.push('Background noise significantly impacts audio quality');
+                        break;
+                }
+                
+                if (avgVolume > 40) {
+                    recommendations.push('Consider moving to a quieter location if possible');
+                }
+                
+                if (avgVolume < 15) {
+                    recommendations.push('Perfect environment for audio content - no adjustments needed');
+                }
+                
+                return recommendations;
+            }
+
+            displayResults(avgVolume, maxVolume, minVolume, avgSpectralCentroid, noiseLevel) {
+                this.summary.innerHTML = `
+                    <div class="summary-item">
+                        <strong>Noise Level:</strong> ${noiseLevel}
+                    </div>
+                    <div class="summary-item">
+                        <strong>Average Volume:</strong> ${avgVolume.toFixed(2)} dB
+                    </div>
+                    <div class="summary-item">
+                        <strong>Peak Volume:</strong> ${maxVolume.toFixed(2)} dB
+                    </div>
+                    <div class="summary-item">
+                        <strong>Minimum Volume:</strong> ${minVolume.toFixed(2)} dB
+                    </div>
+                    <div class="summary-item">
+                        <strong>Spectral Centroid:</strong> ${avgSpectralCentroid.toFixed(0)} Hz
+                    </div>
+                    <div class="summary-item">
+                        <strong>Recording Duration:</strong> 5 seconds
+                    </div>
+                `;
+            }
+
+            displayRecommendations(recommendations) {
+                this.recommendations.innerHTML = recommendations.map(rec => 
+                    `<div class="recommendation-item">• ${rec}</div>`
+                ).join('');
+            }
+
+            createCharts() {
+                this.createFrequencyChart();
+                this.createVolumeChart();
+                this.createSpectralChart();
+            }
+
+            createFrequencyChart() {
+                const ctx = document.getElementById('frequencyChart').getContext('2d');
+                const avgFrequencyData = this.frequencyData[0] || new Array(1024).fill(0);
+                
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({length: avgFrequencyData.length}, (_, i) => 
+                            Math.round(i * this.audioContext.sampleRate / (this.analyser.fftSize * 2))
+                        ),
+                        datasets: [{
+                            label: 'Frequency Response',
+                            data: avgFrequencyData,
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { title: { display: true, text: 'Frequency (Hz)' } },
+                            y: { title: { display: true, text: 'Magnitude' } }
+                        }
+                    }
+                });
+            }
+
+            createVolumeChart() {
+                const ctx = document.getElementById('volumeChart').getContext('2d');
+                
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({length: this.volumeData.length}, (_, i) => i + 1),
+                        datasets: [{
+                            label: 'Volume Over Time',
+                            data: this.volumeData,
+                            borderColor: '#ff6b6b',
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { title: { display: true, text: 'Time (s)' } },
+                            y: { title: { display: true, text: 'Volume (dB)' } }
+                        }
+                    }
+                });
+            }
+
+            createSpectralChart() {
+                const ctx = document.getElementById('spectralChart').getContext('2d');
+                
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Array.from({length: this.spectralData.length}, (_, i) => i + 1),
+                        datasets: [{
+                            label: 'Spectral Centroid',
+                            data: this.spectralData,
+                            backgroundColor: 'rgba(76, 175, 80, 0.8)',
+                            borderColor: '#4caf50',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { title: { display: true, text: 'Time (s)' } },
+                            y: { title: { display: true, text: 'Frequency (Hz)' } }
+                        }
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new SoundAnalyzer();
+        });
+    </script>
+</body>
+</html>
