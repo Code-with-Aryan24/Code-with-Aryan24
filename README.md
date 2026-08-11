@@ -56,4 +56,4 @@ I like keeping both sides around — **building with technology and creating wit
 
 I'm always open to interesting ideas, collaborations, projects and conversations around AI, technology or anything worth building.
 
-[LinkedIn]([YOUR_LINKEDIN_URL](https://www.linkedin.com/in/aryan-pandey-3a0364322/)) • [Instagram](YOUR_INSTAGRAM_URL)
+[LinkedIn](YOUR_LINKEDIN_URL) • [Instagram](YOUR_INSTAGRAM_URL)  
